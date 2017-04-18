@@ -1,0 +1,92 @@
+#!/bin/sh
+
+# Print an introduction line in cyan
+printf "\033[0;36mPre-commit hook is linting your changes for non-standard code...\033[0m \n"
+
+# Assign list of GIT tracked files to an array
+files=$(git diff --name-only --cached)
+numfiles=$( echo -n "$files" | grep -c '^' )
+
+if [ $numfiles -eq 0 ]
+then
+  printf "\033[0;35mNo files staged. Nothing to check.\033[0m\n"
+  exit 1
+fi
+
+# Set field separator to new line character
+IFS=$'\n'
+
+# Default to zero which means the changes are good and the commit can go ahead
+exitstatus=0
+
+numnonpassingfiles=0
+
+# Loop over the file names
+for i in $files
+do
+  # Print file name eg "text.txt"
+  printf "\033[0;35mChecking:\033[0m ${i} "
+
+  # Count number of lines with the plus symbol and tab characters at the start 
+  tabbedlines=$( git diff --cached -U0 $i | egrep "^\+\t" )
+  tabbedlinecount=$( echo -n "$tabbedlines" | grep -c '^' )
+
+  # Count number of lines with an odd number of spaces used to indent 
+  oddspaceindents=$( git diff --cached -U0 $i | egrep "^\+(  )* {1}[^ ]+" )
+  numoddspaceindents=$( echo -n "$oddspaceindents" | grep -c '^' )
+
+  # Total up the errors
+  totalerrors=$((tabbedlinecount + numoddspaceindents))
+
+  # Print the coloured [failed] or [success] report with new line feed at end
+  if [ $totalerrors -gt 0 ]
+  then
+    printf "\033[0;31m[failed]\n"
+    ((numnonpassingfiles++))
+    exitstatus=1
+  else
+    printf "\033[0;32m[passed]\n"
+  fi
+
+  # Print report line about tab character being used
+  if [ $tabbedlinecount -gt 0 ]
+  then
+    printf "${tabbedlinecount} lines indented with a tab character: \033[0;32m \n"
+    for l in $tabbedlines
+    do
+      printf "$l \n"
+    done
+    printf "\n"
+  fi
+
+  # Print report line about indenting with an odd number of spaces 
+  if [ $numoddspaceindents -gt 0 ]
+  then
+    printf "\033[0;31m${numoddspaceindents} lines indented using an odd number of spaces: \033[0;32m \n"
+    for l in $oddspaceindents
+    do
+      printf "$l \n"
+    done
+    printf "\n"
+  fi
+
+  # Reset print color back to default for the next iteration
+  printf "\033[0m"
+
+done
+unset IFS
+
+if [ $exitstatus -eq 0 ]
+then
+  printf "\033[0;32m-- ${numfiles} file"
+  if [ $numfiles -gt 1 ]
+  then
+    printf "s"
+  fi
+  printf " passed\033[0m\n"
+else
+  printf "Sorry, ${numnonpassingfiles} of ${numfiles} staged files contain lines that do not pass.\n"
+fi
+
+exit $exitstatus
+
