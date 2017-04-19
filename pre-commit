@@ -5,7 +5,7 @@ printf "\033[0;36mPre-commit hook is linting your changes for non-standard code.
 
 # Grab feed of staged files 
 files=$(git diff --name-only --cached)
-numfiles=$( echo -n "$files" | grep -c '^' )
+numfiles=$( printf '%s' "$files" | grep -c '^' )
 
 if [ $numfiles -eq 0 ]
 then
@@ -26,11 +26,11 @@ do
 
   # Count number of lines with the plus symbol and tab characters at the start (eg. New lines, indented wrongly)
   tabbedlines=$( git diff --cached -U0 $i | egrep "^\+\t" )
-  tabbedlinecount=$( echo -n "$tabbedlines" | grep -c '^' )
+  tabbedlinecount=$( printf '%s' "$tabbedlines" | grep -c '^' )
 
   # Count number of lines with the plus symbol and an odd number of spaces used to indent (eg. New lines, indented wrongly)
   oddspaceindents=$( git diff --cached -U0 $i | egrep "^\+(  )* {1}[^ ]+" )
-  numoddspaceindents=$( echo -n "$oddspaceindents" | grep -c '^' )
+  numoddspaceindents=$( printf '%s' "$oddspaceindents" | grep -c '^' )
 
   # Total up the offending lines 
   totalerrors=$((tabbedlinecount + numoddspaceindents))
