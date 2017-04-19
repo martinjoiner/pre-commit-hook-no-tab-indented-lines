@@ -18,11 +18,28 @@ exitstatus=0
 
 numnonpassingfiles=0
 
+# Iterate over the filenames to discover the longest 
+longest=0
+for i in $files
+do
+  if [ ${#i} -gt $longest ]
+  then
+    longest=${#i}
+  fi
+done
+
 # Iterate over the staged filenames
 for i in $files
 do
   # Print file name eg: "Checking: text.txt"
   printf "\033[0;35mChecking:\033[0m ${i} "
+
+  # Print some padding spaces so the failed/success statuses line up
+  padding=$(expr $longest - ${#i})
+  for ((n=0;n<$padding;n++))
+  do
+    printf '%s' ' ' 
+  done
 
   # Count number of lines with the plus symbol and tab characters at the start (eg. New lines, indented wrongly)
   tabbedlines=$( git diff --cached -U0 $i | egrep "^\+\t" )
@@ -80,9 +97,9 @@ then
   then
     printf "s"
   fi
-  printf " passed\033[0m\n"
+  printf " passed. Continuing with commit... \033[0m\n"
 else
-  printf "Sorry, ${numnonpassingfiles} of ${numfiles} staged files contain lines that do not pass.\n"
+  printf '%s\n' "-- Sorry, ${numnonpassingfiles} of ${numfiles} staged files contain lines that do not pass."
 fi
 
 exit $exitstatus
