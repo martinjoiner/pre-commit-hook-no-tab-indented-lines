@@ -13,9 +13,6 @@ then
   exit 1
 fi
 
-# Set field separator to new line character
-IFS=$'\n'
-
 # Default to zero which means the changes are good and the commit can go ahead
 exitstatus=0
 
@@ -74,7 +71,6 @@ do
   printf "\033[0m"
 
 done
-unset IFS
 
 # Print a summary of lint
 if [ $exitstatus -eq 0 ]
