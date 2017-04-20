@@ -32,25 +32,25 @@ done
 for i in $files
 do
   # Print file name eg: "Checking: text.txt"
-  printf "\033[0;35mChecking:\033[0m ${i} "
+  printf "\033[0;35mChecking:\033[0m %s " "$i"
 
   # Print some padding spaces so the failed/success statuses line up
   padding=$(expr $longest - ${#i})
   for ((n=0;n<$padding;n++))
   do
-    printf '%s' ' ' 
+    printf " " 
   done
 
   # Count number of lines with the plus symbol and tab characters at the start (eg. New lines, indented wrongly)
-  tabbedlines=$( git diff --cached -U0 $i | egrep "^\+\t" )
-  tabbedlinecount=$( printf '%s' "$tabbedlines" | grep -c '^' )
+  tabbedlines=$( git diff --cached -U0 -- $i | egrep "^\+\t" )
+  tabbedlinecount=$( printf "%s" "$tabbedlines" | grep -c '^' )
 
   # Count number of lines with the plus symbol and an odd number of spaces used to indent (eg. New lines, indented wrongly)
-  oddspaceindents=$( git diff --cached -U0 $i | egrep "^\+(  )* {1}[^ ]+" )
-  numoddspaceindents=$( printf '%s' "$oddspaceindents" | grep -c '^' )
+  oddspaceindents=$( git diff --cached -U0 -- $i | egrep "^\+(  )* {1}[^ \*]+.*$" )
+  numoddspaceindents=$( printf "%s" "$oddspaceindents" | grep -c '^' )
 
   # Total up the offending lines 
-  totalerrors=$((tabbedlinecount + numoddspaceindents))
+  totalerrors=$(expr $tabbedlinecount + $numoddspaceindents)
 
   # Print the coloured [failed] or [success] report 
   if [ $totalerrors -gt 0 ]
@@ -65,22 +65,22 @@ do
   # Print report line about tab character being used
   if [ $tabbedlinecount -gt 0 ]
   then
-    printf "${tabbedlinecount} lines indented with a tab character: \033[0;32m \n"
-    for l in $tabbedlines
+    printf "%s lines indented with a tab character: \033[0;32m \n" "$tabbedlinecount"
+    while read -r line;
     do
-      printf "$l \n"
-    done
+      printf "%s\n" "$line"
+    done <<< "$tabbedlines"
     printf "\n"
   fi
 
   # Print report line about indenting with an odd number of spaces 
   if [ $numoddspaceindents -gt 0 ]
   then
-    printf "\033[0;31m${numoddspaceindents} lines indented using an odd number of spaces: \033[0;32m \n"
-    for l in $oddspaceindents
+    printf "\033[0;31m%s lines indented using an odd number of spaces: \033[0;32m \n" "$numoddspaceindents"
+    while read -r line; 
     do
-      printf "$l \n"
-    done
+      printf "%s\n" "$line"
+    done <<< "$oddspaceindents"
     printf "\n"
   fi
 
@@ -92,15 +92,14 @@ done
 # Print a summary of lint
 if [ $exitstatus -eq 0 ]
 then
-  printf "\033[0;32m-- ${numfiles} file"
+  printf "\033[0;32m%s %s file" "--" "$numfiles"
   if [ $numfiles -gt 1 ]
   then
     printf "s"
   fi
   printf " passed. Continuing with commit... \033[0m\n"
 else
-  printf '%s\n' "-- Sorry, ${numnonpassingfiles} of ${numfiles} staged files contain lines that do not pass."
+  printf "%s Sorry, %s of %s staged files contain lines that do not pass.\n" "--" "$numnonpassingfiles" "$numfiles"
 fi
 
 exit $exitstatus
-
