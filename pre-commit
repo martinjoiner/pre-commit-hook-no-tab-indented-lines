@@ -45,15 +45,8 @@ do
   tabbedlines=$( git diff --cached -U0 -- $i | egrep "^\+\t" )
   tabbedlinecount=$( printf "%s" "$tabbedlines" | grep -c '^' )
 
-  # Count number of lines with the plus symbol and an odd number of spaces used to indent (eg. New lines, indented wrongly)
-  oddspaceindents=$( git diff --cached -U0 -- $i | egrep "^\+(  )* {1}[^ \*]+.*$" )
-  numoddspaceindents=$( printf "%s" "$oddspaceindents" | grep -c '^' )
-
-  # Total up the offending lines 
-  totalerrors=$(expr $tabbedlinecount + $numoddspaceindents)
-
   # Print the coloured [failed] or [success] report 
-  if [ $totalerrors -gt 0 ]
+  if [ $tabbedlinecount -gt 0 ]
   then
     printf "\033[0;31m[failed]\n"
     ((numnonpassingfiles++))
@@ -70,17 +63,6 @@ do
     do
       printf "%s\n" "$line"
     done <<< "$tabbedlines"
-    printf "\n"
-  fi
-
-  # Print report line about indenting with an odd number of spaces 
-  if [ $numoddspaceindents -gt 0 ]
-  then
-    printf "\033[0;31m%s lines indented using an odd number of spaces: \033[0;32m \n" "$numoddspaceindents"
-    while read -r line; 
-    do
-      printf "%s\n" "$line"
-    done <<< "$oddspaceindents"
     printf "\n"
   fi
 
