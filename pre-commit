@@ -42,7 +42,7 @@ do
   done
 
   # Count number of lines with the plus symbol and tab characters at the start (eg. New lines, indented wrongly)
-  tabbedlines=$( git diff --cached -U0 -- $i | egrep "^\+\t" )
+  tabbedlines=$( git diff --cached -U0 -- $i | egrep "^\+	" )
   tabbedlinecount=$( printf "%s" "$tabbedlines" | grep -c '^' )
 
   # Print the coloured [failed] or [success] report 
