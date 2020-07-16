@@ -19,12 +19,12 @@ cd .git/hooks
 
 If you have wget installed...
 ```
-wget https://raw.githubusercontent.com/martinjoiner/portable-code-pre-commit-hook/master/pre-commit .
+wget https://raw.githubusercontent.com/martinjoiner/pre-commit-hook-no-tab-indented-lines/main/pre-commit .
 ```
 
 If no wget, try cURL instead...
 ```
-curl https://raw.githubusercontent.com/martinjoiner/portable-code-pre-commit-hook/master/pre-commit -o pre-commit
+curl https://raw.githubusercontent.com/martinjoiner/pre-commit-hook-no-tab-indented-lines/main/pre-commit -o pre-commit
 ```
 
 Give the file execute permissions
